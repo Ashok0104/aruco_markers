@@ -1,0 +1,40 @@
+{
+    "timestamp": "2025-02-19T12:55:29.961590",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 37,
+                "y": 162
+            },
+            "processed": true
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 306,
+                "y": 160
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 443,
+                "y": 163
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F",
+            "2",
+            "B"
+        ]
+    ]
+}

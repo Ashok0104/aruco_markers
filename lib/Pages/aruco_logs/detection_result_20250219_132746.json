@@ -1,0 +1,19 @@
+{
+    "timestamp": "2025-02-19T13:27:46.362769",
+    "markers": [
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 1746,
+                "y": 3120
+            }
+        }
+    ],
+    "rows": [
+        [
+            "B"
+        ]
+    ]
+}

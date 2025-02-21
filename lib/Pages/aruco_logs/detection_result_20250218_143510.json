@@ -1,0 +1,78 @@
+{
+    "timestamp": "2025-02-18T14:35:10.841761",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "FF",
+            "type": "ascii",
+            "position": {
+                "x": 43,
+                "y": 137
+            },
+            "processed": true,
+            "multiplier": 2
+        },
+        {
+            "id": 66,
+            "display_value": "BBB",
+            "type": "ascii",
+            "position": {
+                "x": 223,
+                "y": 132
+            },
+            "processed": true,
+            "multiplier": 3
+        },
+        {
+            "id": 76,
+            "display_value": "LLLL",
+            "type": "ascii",
+            "position": {
+                "x": 400,
+                "y": 130
+            },
+            "processed": true,
+            "multiplier": 4
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 579,
+                "y": 125
+            }
+        }
+    ],
+    "columns": [
+        [
+            "FF"
+        ],
+        [
+            "BBB"
+        ],
+        [
+            "LLLL"
+        ],
+        [
+            "R"
+        ]
+    ],
+    "vertical_pairs": [
+        {
+            "ascii": "F",
+            "multiplier": 2,
+            "result": "FF"
+        },
+        {
+            "ascii": "B",
+            "multiplier": 3,
+            "result": "BBB"
+        },
+        {
+            "ascii": "L",
+            "multiplier": 4,
+            "result": "LLLL"
+        }
+    ]
+}
