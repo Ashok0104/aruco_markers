@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:flutter/services.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -104,14 +106,34 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final XFile? image = await _picker.pickImage(source: source);
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        imageQuality: 80, // Optional: Compress image for better performance
+      );
+
       if (image != null) {
         await _processImage(File(image.path));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error picking image: $e')),
-      );
+      // Handle specific permission errors
+      if (e is PlatformException) {
+        String errorMessage = 'Error picking image: $e';
+
+        if (source == ImageSource.camera &&
+            (e.code == 'camera_access_denied' ||
+                e.code.contains('permission'))) {
+          errorMessage =
+              'Camera permission denied. Please enable it in settings.';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error picking image: $e')),
+        );
+      }
     }
   }
 
@@ -312,8 +334,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final sequentialOutput =
         _detectionResult!['sequential_output'] ?? 'No output';
     // final dictionaryUsed = _detectionResult!['dictionary_used'] ?? 'Unknown';
-    final markers = _detectionResult!['markers'] as List<dynamic>? ?? [];
-    final rows = _detectionResult!['rows'] as List<dynamic>? ?? [];
+    // final markers = _detectionResult!['markers'] as List<dynamic>? ?? [];
+    // final rows = _detectionResult!['rows'] as List<dynamic>? ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
