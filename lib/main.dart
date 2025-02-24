@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart';
+import 'package:image/image.dart' as img;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadSavedServerIp() async {
     // Here you could load saved IP from SharedPreferences
     // For now, we'll use a default
-    _serverIpController.text = "192.168.4.72:8000";
+    _serverIpController.text = "192.168.4.97:8000";
     _updateServerBaseUrl();
   }
 
@@ -112,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (image != null) {
-        await _processImage(File(image.path));
+        await _processAndUploadImage(File(image.path));
       }
     } catch (e) {
       // Handle specific permission errors
@@ -137,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _processImage(File imageFile) async {
+  Future<void> _processAndUploadImage(File imageFile) async {
     if (_serverBaseUrl.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter server IP address')),
@@ -151,6 +152,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
+      // Resize the image to 420 pixels
+      final resizedImage = await _resizeImage(imageFile, 420);
+
       // Create multipart request
       var request = http.MultipartRequest(
         'POST',
@@ -160,7 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Add file
       request.files.add(await http.MultipartFile.fromPath(
         'file',
-        imageFile.path,
+        resizedImage.path,
       ));
 
       // Add selected dictionaries if any
@@ -192,6 +196,18 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  Future<File> _resizeImage(File imageFile, int size) async {
+    final bytes = await imageFile.readAsBytes();
+    final image = img.decodeImage(bytes)!;
+
+    final resizedImage = img.copyResize(image, width: size);
+
+    final resizedImageFile = File(imageFile.path)
+      ..writeAsBytesSync(img.encodeJpg(resizedImage));
+
+    return resizedImageFile;
   }
 
   Future<void> _sendBluetoothCommand() async {
@@ -333,9 +349,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final sequentialOutput =
         _detectionResult!['sequential_output'] ?? 'No output';
-    // final dictionaryUsed = _detectionResult!['dictionary_used'] ?? 'Unknown';
-    // final markers = _detectionResult!['markers'] as List<dynamic>? ?? [];
-    // final rows = _detectionResult!['rows'] as List<dynamic>? ?? [];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,48 +359,6 @@ class _HomeScreenState extends State<HomeScreen> {
           icon: Icons.text_fields,
           color: Colors.purple,
         ),
-        // ResultInfoTile(
-        //   title: 'Dictionary Used',
-        //   value: dictionaryUsed,
-        //   icon: Icons.library_books,
-        //   color: Colors.teal,
-        // ),
-        // ResultInfoTile(
-        //   title: 'Markers Detected',
-        //   value: markers.length.toString(),
-        //   icon: Icons.grid_on,
-        //   color: Colors.orange,
-        // ),
-        // const SizedBox(height: 16),
-        // const Text(
-        //   'Detected Markers by Row:',
-        //   style: TextStyle(fontWeight: FontWeight.bold),
-        // ),
-        // const SizedBox(height: 8),
-        // Container(
-        //   decoration: BoxDecoration(
-        //     border: Border.all(color: Colors.grey.shade300),
-        //     borderRadius: BorderRadius.circular(8),
-        //   ),
-        //   child: SingleChildScrollView(
-        //     scrollDirection: Axis.horizontal,
-        //     child: DataTable(
-        //       columns: const [
-        //         DataColumn(label: Text('Row')),
-        //         DataColumn(label: Text('Markers')),
-        //       ],
-        //       rows: List.generate(rows.length, (index) {
-        //         final rowContent = (rows[index] as List).join(', ');
-        //         return DataRow(
-        //           cells: [
-        //             DataCell(Text('${index + 1}')),
-        //             DataCell(Text(rowContent)),
-        //           ],
-        //         );
-        //       }),
-        //     ),
-        //   ),
-        // ),
       ],
     );
   }
