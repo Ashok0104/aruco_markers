@@ -414,6 +414,9 @@ async def send_bluetooth_message(message):
             bluetooth_logger.info(f"Connected to {ADDRESS}")
             result = await send_message(client, message)
             return result
+    except asyncio.CancelledError:
+        error_logger.error("Bluetooth connection attempt was cancelled")
+        return False
     except Exception as e:
         error_logger.error(f"Bluetooth communication error: {e}")
         return False
