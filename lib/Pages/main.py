@@ -245,9 +245,9 @@ def detect_markers_with_dictionary(image, dict_type):
         return None, 0
 
 def detect_markers_with_multiple_dictionaries(image, dict_types=None):
-    """Try multiple ArUco dictionaries to find the best match"""
-    if dict_types is None:
-        dict_types = list(ARUCO_DICTIONARIES.keys())
+    """Try multiple ArUco dictionaries to find the best match, limited to 6x6 dictionaries"""
+    # Override any provided dict_types to use only the allowed dictionaries
+    dict_types = ["DICT_6X6_100", "DICT_6X6_250"]
     
     best_result = None
     max_markers = 0
@@ -268,7 +268,7 @@ def detect_markers_with_multiple_dictionaries(image, dict_types=None):
         detection_logger.info(f"Best dictionary was {best_dict} with {max_markers} markers")
         return best_result
     else:
-        detection_logger.warning("No markers detected with any dictionary")
+        detection_logger.warning("No markers detected with allowed dictionaries")
         return ([], None, None)
 
 def getExpectedMarkerCount(image):
@@ -428,8 +428,8 @@ async def detect_markers(
     file: UploadFile = File(...),
     dict_types: Optional[List[str]] = Query(
         None,
-        description="List of ArUco dictionary types to use. If not provided, all dictionaries will be tried.",
-        example=["DICT_4X4_50", "DICT_6X6_250"]
+        description="Only DICT_6X6_100 and DICT_6X6_250 are supported.",
+        example=["DICT_6X6_100", "DICT_6X6_250"]
     ),
     source: str = Query(
         "unknown",
@@ -438,15 +438,24 @@ async def detect_markers(
 ):
     operation_logger.info(f"Starting marker detection for file: {file.filename}, source: {source}")
     
+    # Override any provided dict_types to use only the allowed dictionaries
+    allowed_dicts = ["DICT_6X6_100", "DICT_6X6_250"]
+    
+    # If dict_types are provided, check if they're allowed
     if dict_types:
-        invalid_dicts = [d for d in dict_types if d not in ARUCO_DICTIONARIES]
+        invalid_dicts = [d for d in dict_types if d not in allowed_dicts]
         if invalid_dicts:
             error_logger.error(f"Invalid dictionary types: {invalid_dicts}")
             return JSONResponse(
                 status_code=400, 
                 content={"error": f"Invalid dictionary types: {invalid_dicts}", 
-                         "valid_types": list(ARUCO_DICTIONARIES.keys())}
+                         "valid_types": allowed_dicts}
             )
+        # Only use dictionaries that are both provided and allowed
+        dict_types = [d for d in dict_types if d in allowed_dicts]
+    else:
+        # If none provided, use all allowed dictionaries
+        dict_types = allowed_dicts
     
     image_bytes = await file.read()
     
@@ -462,6 +471,7 @@ async def detect_markers(
     
     # Detect markers with standardized parameters
     corners, ids, used_dict = detect_markers_with_multiple_dictionaries(image, dict_types)
+
     
     if ids is None:
         detection_logger.warning("No ArUco markers detected")
@@ -533,48 +543,37 @@ async def detect_markers(
     return JSONResponse(content=result_data)
 
 # Define the model for the Bluetooth trigger request
-class BluetoothTriggerRequest(BaseModel):
-    result_id: str
+class DirectBluetoothRequest(BaseModel):
+    message: str
 
-@app.post("/send_bluetooth/")
-async def send_bluetooth(request: BluetoothTriggerRequest):
-    """Endpoint for Flutter to trigger Bluetooth transmission of a previously detected result"""
-    result_id = request.result_id
+# Add this endpoint
+@app.post("/send_bluetooth_direct/")
+async def send_bluetooth_direct(request: DirectBluetoothRequest):
+    """Endpoint for sending a message directly via Bluetooth without needing a previous detection"""
+    message = request.message
     
-    # Check if the result exists in our cache
-    if result_id not in detection_results_cache:
-        error_logger.error(f"Result ID {result_id} not found in cache")
-        return JSONResponse(
-            status_code=404,
-            content={"error": "Detection result not found. The result may have expired."}
-        )
-    
-    # Get the result data
-    result_data = detection_results_cache[result_id]
-    final_output = result_data.get("sequential_output", "")
-    
-    if not final_output:
-        error_logger.error(f"No output to send for result ID {result_id}")
+    if not message:
+        error_logger.error("No message provided for direct Bluetooth send")
         return JSONResponse(
             status_code=400,
-            content={"error": "No output data available to send"}
+            content={"error": "No message provided to send"}
         )
     
     # Send via Bluetooth
-    bluetooth_logger.info(f"Sending via Bluetooth: {final_output} (triggered by Flutter)")
-    success = await send_bluetooth_message(final_output)
+    bluetooth_logger.info(f"Sending via Bluetooth (direct): {message}")
+    success = await send_bluetooth_message(message)
     
     if success:
         return JSONResponse(
             content={
                 "message": "Bluetooth transmission successful",
-                "data_sent": final_output
+                "data_sent": message
             }
         )
     else:
         return JSONResponse(
             status_code=500,
-            content={"error": "Bluetooth transmission failed"}
+            content={"error": "Bluetooth not connected"}
         )
 
 @app.get("/available_dictionaries/")

@@ -1,0 +1,32 @@
+{
+    "timestamp": "2025-02-19T14:33:03.128730",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 37,
+                "y": 110
+            },
+            "processed": true
+        },
+        {
+            "id": 66,
+            "display_value": "BB",
+            "type": "ascii",
+            "position": {
+                "x": 305,
+                "y": 113
+            },
+            "processed": true
+        }
+    ],
+    "rows": [
+        [
+            "F",
+            "BB"
+        ]
+    ]
+}

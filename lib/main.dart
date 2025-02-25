@@ -1,415 +1,521 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
+import 'package:http_parser/http_parser.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+void main() {
   runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'ArUco Detector',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        brightness: Brightness.light,
-        useMaterial3: true,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      darkTheme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
-      themeMode: ThemeMode.system,
-      home: const HomeScreen(),
+      home: ArucoDetectorPage(),
     );
   }
 }
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
+class ArucoDetectorPage extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _ArucoDetectorPageState createState() => _ArucoDetectorPageState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _ArucoDetectorPageState extends State<ArucoDetectorPage> {
   final ImagePicker _picker = ImagePicker();
-  final TextEditingController _serverIpController = TextEditingController();
-  String _serverBaseUrl = '';
+  File? _selectedImage;
   bool _isLoading = false;
-  Map<String, dynamic>? _detectionResult;
-  List<String> _availableDictionaries = [];
-  List<String> _selectedDictionaries = [];
+  bool _isProcessing = false;
+  String? _detectionResultId;
+  String? _sequentialOutput;
+  List<dynamic>? _detectedMarkers;
+  List<List<dynamic>>? _rows;
+  String? _errorMessage;
 
-  @override
-  void initState() {
-    super.initState();
-    _loadSavedServerIp();
-    _checkPermissions();
-  }
-
-  Future<void> _loadSavedServerIp() async {
-    // Here you could load saved IP from SharedPreferences
-    // For now, we'll use a default
-    _serverIpController.text = "192.168.4.97:8000";
-    _updateServerBaseUrl();
-  }
-
-  void _updateServerBaseUrl() {
-    if (_serverIpController.text.isNotEmpty) {
-      setState(() {
-        _serverBaseUrl = 'http://${_serverIpController.text}';
-      });
-      _fetchAvailableDictionaries();
-    }
-  }
-
-  Future<void> _checkPermissions() async {
-    await [
-      Permission.camera,
-      Permission.storage,
-      Permission.bluetooth,
-      Permission.bluetoothConnect,
-      Permission.bluetoothScan,
-    ].request();
-  }
-
-  Future<void> _fetchAvailableDictionaries() async {
-    if (_serverBaseUrl.isEmpty) return;
-
-    try {
-      final response = await http.get(
-        Uri.parse('$_serverBaseUrl/available_dictionaries/'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          _availableDictionaries = List<String>.from(data['dictionaries']);
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to fetch dictionaries: $e')),
-      );
-    }
-  }
+  // API configuration
+  final String apiBaseUrl =
+      "http://192.168.4.76:8000"; // Update with your API URL
 
   Future<void> _pickImage(ImageSource source) async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        imageQuality: 80, // Optional: Compress image for better performance
-      );
+      final XFile? pickedFile = await _picker.pickImage(source: source);
 
-      if (image != null) {
-        await _processAndUploadImage(File(image.path));
+      if (pickedFile != null) {
+        setState(() {
+          _selectedImage = File(pickedFile.path);
+          // Reset previous results
+          _detectionResultId = null;
+          _sequentialOutput = null;
+          _detectedMarkers = null;
+          _rows = null;
+          _errorMessage = null;
+        });
       }
     } catch (e) {
-      // Handle specific permission errors
-      if (e is PlatformException) {
-        String errorMessage = 'Error picking image: $e';
-
-        if (source == ImageSource.camera &&
-            (e.code == 'camera_access_denied' ||
-                e.code.contains('permission'))) {
-          errorMessage =
-              'Camera permission denied. Please enable it in settings.';
-        }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMessage)),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
-        );
-      }
+      setState(() {
+        _errorMessage = "Error picking image: $e";
+      });
     }
   }
 
-  Future<void> _processAndUploadImage(File imageFile) async {
-    if (_serverBaseUrl.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter server IP address')),
-      );
+  Future<void> _uploadImage() async {
+    if (_selectedImage == null) {
+      setState(() {
+        _errorMessage = "Please select an image first";
+      });
       return;
     }
 
     setState(() {
-      _isLoading = true;
-      _detectionResult = null;
+      _isProcessing = true;
+      _errorMessage = null;
     });
 
     try {
-      // Resize the image to 420 pixels
-      final resizedImage = await _resizeImage(imageFile, 420);
-
       // Create multipart request
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$_serverBaseUrl/detect_markers/'),
+        Uri.parse('$apiBaseUrl/detect_markers/'),
       );
 
-      // Add file
-      request.files.add(await http.MultipartFile.fromPath(
-        'file',
-        resizedImage.path,
-      ));
+      // Determine source type based on how the image was selected
+      String sourceType =
+          _imageSource == ImageSource.camera ? "camera" : "gallery";
 
-      // Add selected dictionaries if any
-      if (_selectedDictionaries.isNotEmpty) {
-        _selectedDictionaries.forEach((dict) {
-          request.fields['dict_types'] = dict;
-        });
-      }
+      // Add query parameters
+      request.fields['source'] = sourceType;
 
-      // Send request
+      // Add dictionary types as query parameters
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          'file',
+          _selectedImage!.path,
+          contentType: MediaType('image', 'jpeg'),
+        ),
+      );
+
+      // Add the ArUco dictionary types
+      request.fields['dict_types'] = 'DICT_4X4_50,DICT_6X6_250';
+
+      // Send the request
       var streamedResponse = await request.send();
       var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
+        var data = jsonDecode(response.body);
         setState(() {
-          _detectionResult = jsonDecode(response.body);
+          _detectionResultId = data['result_id'];
+          _sequentialOutput = data['sequential_output'];
+          _detectedMarkers = data['markers'];
+          _rows = List<List<dynamic>>.from(
+              data['rows'].map((row) => List<dynamic>.from(row)));
+          _isProcessing = false;
         });
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${response.body}')),
-        );
+        setState(() {
+          _errorMessage = "Error: ${response.statusCode} - ${response.body}";
+          _isProcessing = false;
+        });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error processing image: $e')),
-      );
-    } finally {
       setState(() {
-        _isLoading = false;
+        _errorMessage = "Error uploading image: $e";
+        _isProcessing = false;
       });
     }
   }
 
-  Future<File> _resizeImage(File imageFile, int size) async {
-    final bytes = await imageFile.readAsBytes();
-    final image = img.decodeImage(bytes)!;
-
-    final resizedImage = img.copyResize(image, width: size);
-
-    final resizedImageFile = File(imageFile.path)
-      ..writeAsBytesSync(img.encodeJpg(resizedImage));
-
-    return resizedImageFile;
-  }
-
-  Future<void> _sendBluetoothCommand() async {
-    if (_detectionResult == null || _detectionResult!['result_id'] == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No detection result available')),
-      );
+  Future<void> _sendBluetooth() async {
+    if (_sequentialOutput == null || _sequentialOutput!.isEmpty) {
+      setState(() {
+        _errorMessage = "No sequential output to send";
+      });
       return;
     }
 
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
 
     try {
+      // Create the request body with the sequential output message directly
+      final requestBody = jsonEncode({"message": _sequentialOutput});
+
       final response = await http.post(
-        Uri.parse('$_serverBaseUrl/send_bluetooth/'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'result_id': _detectionResult!['result_id'],
-        }),
+        Uri.parse('$apiBaseUrl/send_bluetooth_direct/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: requestBody,
       );
 
       if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('Bluetooth sent: ${responseData['data_sent']}')),
+          SnackBar(content: Text("Bluetooth sent: $_sequentialOutput")),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bluetooth error: ${response.body}')),
-        );
+        setState(() {
+          _errorMessage =
+              "Error sending Bluetooth: ${response.statusCode} - ${response.body}";
+        });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error sending Bluetooth command: $e')),
-      );
+      setState(() {
+        _errorMessage = "Error with Bluetooth: $e";
+      });
     } finally {
       setState(() {
         _isLoading = false;
       });
     }
+  }
+
+  ImageSource? _imageSource;
+
+  void _showImageSourceSelector() {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: Icon(Icons.camera_alt),
+              title: Text('Take a photo'),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _imageSource = ImageSource.camera;
+                });
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Choose from gallery'),
+              onTap: () {
+                Navigator.of(context).pop();
+                setState(() {
+                  _imageSource = ImageSource.gallery;
+                });
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String interpretSequentialOutput(String output) {
+    if (output == null || output.isEmpty) {
+      return "No commands";
+    }
+
+    Map<String, String> interpretations = {
+      'F': 'Forward',
+      'B': 'Backward',
+      'L': 'Left',
+      'R': 'Right',
+    };
+
+    List<String> result = [];
+    int count = 1;
+    String currentChar = output[0];
+
+    for (int i = 1; i < output.length; i++) {
+      if (output[i] == currentChar) {
+        count++;
+      } else {
+        if (interpretations.containsKey(currentChar)) {
+          result.add(
+              "${interpretations[currentChar]} ${count > 1 ? 'x $count' : ''}");
+        } else {
+          result.add("$currentChar ${count > 1 ? 'x $count' : ''}");
+        }
+        currentChar = output[i];
+        count = 1;
+      }
+    }
+
+    // Add the last group
+    if (interpretations.containsKey(currentChar)) {
+      result.add(
+          "${interpretations[currentChar]} ${count > 1 ? 'x $count' : ''}");
+    } else {
+      result.add("$currentChar ${count > 1 ? 'x $count' : ''}");
+    }
+
+    return result.join('\n');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('ArUco Marker Detector'),
+        centerTitle: true,
+        title: Text(
+          'A R U C O',
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            color: Colors.black,
+          ),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(16),
+          ),
+        ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 16),
-                  const SizedBox(height: 16),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Capture Image',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              ElevatedButton.icon(
-                                onPressed: () => _pickImage(ImageSource.camera),
-                                icon: const Icon(Icons.camera_alt),
-                                label: const Text('Camera'),
-                              ),
-                              ElevatedButton.icon(
-                                onPressed: () =>
-                                    _pickImage(ImageSource.gallery),
-                                icon: const Icon(Icons.photo_library),
-                                label: const Text('Gallery'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  if (_detectionResult != null) ...[
-                    const SizedBox(height: 16),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Image selection area
+              Container(
+                height: 300,
+                decoration: BoxDecoration(
+                  color: Colors.amber.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: _selectedImage != null
+                    ? Image.file(_selectedImage!, fit: BoxFit.contain)
+                    : Center(child: Text('No image selected')),
+              ),
+              SizedBox(height: 16),
+
+              // Image selection button
+              ElevatedButton.icon(
+                onPressed: _showImageSourceSelector,
+                icon: Icon(
+                  Icons.add_photo_alternate,
+                  color: Colors.black,
+                ),
+                label: Text(
+                  'Select Image',
+                  style: TextStyle(color: Colors.black),
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 12.0),
+                ),
+              ),
+              SizedBox(height: 8),
+
+              // Upload button
+              if (_selectedImage != null)
+                ElevatedButton(
+                  onPressed: _isProcessing ? null : _uploadImage,
+                  child: _isProcessing
+                      ? Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'Detection Results',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                ElevatedButton.icon(
-                                  onPressed: _sendBluetoothCommand,
-                                  icon: const Icon(Icons.bluetooth),
-                                  label: const Text('Upload'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                ),
-                              ],
+                            SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
-                            const SizedBox(height: 16),
-                            _buildResultDisplay(),
+                            SizedBox(width: 8),
+                            Text('Processing...'),
+                          ],
+                        )
+                      : Text('Submit',
+                          style: TextStyle(fontSize: 18, color: Colors.black)),
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12.0),
+                    backgroundColor: Colors.green,
+                  ),
+                ),
+              SizedBox(height: 16),
+
+              // Error message
+              if (_errorMessage != null)
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red[100],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    _errorMessage!,
+                    style: TextStyle(color: Colors.red[900]),
+                  ),
+                ),
+
+              // Results section
+              if (_sequentialOutput != null) ...[
+                Divider(thickness: 1),
+                Text(
+                  'Detection Results',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8),
+
+                // Sequential output with Bluetooth option
+                // Card(
+                //   elevation: 2,
+                //   child: Padding(
+                //     padding: const EdgeInsets.all(16.0),
+                //     child: Row(
+                //       children: [
+                //         Expanded(
+                //           child: Column(
+                //             crossAxisAlignment: CrossAxisAlignment.start,
+                //             children: [
+                //               Text(
+                //                 'Sequential Output:',
+                //                 style: TextStyle(
+                //                   fontWeight: FontWeight.bold,
+                //                   color: Colors.grey[600],
+                //                 ),
+                //               ),
+                //               SizedBox(height: 4),
+                //               Text(
+                //                 _sequentialOutput!,
+                //                 style: TextStyle(
+                //                   fontSize: 24,
+                //                   fontWeight: FontWeight.bold,
+                //                 ),
+                //               ),
+                //             ],
+                //           ),
+                //         ),
+                //         IconButton(
+                //           icon: Icon(Icons.bluetooth, color: Colors.blue),
+                //           onPressed: _isLoading ? null : _sendBluetooth,
+                //           tooltip: 'Send via Bluetooth',
+                //         ),
+                //         if (_isLoading)
+                //           SizedBox(
+                //             height: 16,
+                //             width: 16,
+                //             child: CircularProgressIndicator(strokeWidth: 2),
+                //           ),
+                //       ],
+                //     ),
+                //   ),
+                // ),
+                SizedBox(height: 16),
+                Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Moves:',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.bluetooth, color: Colors.blue),
+                              onPressed: _isLoading ? null : _sendBluetooth,
+                              tooltip: 'Send via Bluetooth',
+                            ),
+                            if (_isLoading)
+                              SizedBox(
+                                height: 16,
+                                width: 16,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
                           ],
                         ),
-                      ),
+                        SizedBox(height: 12),
+                        Center(
+                          child: Text(
+                            interpretSequentialOutput(_sequentialOutput!),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.green[800],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildResultDisplay() {
-    if (_detectionResult == null) return const SizedBox.shrink();
-
-    final sequentialOutput =
-        _detectionResult!['sequential_output'] ?? 'No output';
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        ResultInfoTile(
-          title: 'Sequential Output',
-          value: sequentialOutput,
-          icon: Icons.text_fields,
-          color: Colors.purple,
-        ),
-      ],
-    );
-  }
-}
-
-class ResultInfoTile extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-
-  const ResultInfoTile({
-    required this.title,
-    required this.value,
-    required this.icon,
-    required this.color,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: color.withOpacity(0.2),
-            child: Icon(icon, color: color, size: 18),
-          ),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
+                  ),
                 ),
-              ),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+
+                // Detected markers
+                // if (_detectedMarkers != null &&
+                //     _detectedMarkers!.isNotEmpty) ...[
+                //   Text(
+                //     'Detected Markers:',
+                //     style: TextStyle(
+                //       fontWeight: FontWeight.bold,
+                //     ),
+                //   ),
+                //   SizedBox(height: 8),
+                //   // Display marker grid
+                //   if (_rows != null)
+                //     Card(
+                //       child: Padding(
+                //         padding: const EdgeInsets.all(8.0),
+                //         child: Column(
+                //           children: _rows!.map((row) {
+                //             return Padding(
+                //               padding:
+                //                   const EdgeInsets.symmetric(vertical: 4.0),
+                //               child: Row(
+                //                 mainAxisAlignment:
+                //                     MainAxisAlignment.spaceEvenly,
+                //                 children: row.map((marker) {
+                //                   return Container(
+                //                     width: 40,
+                //                     height: 40,
+                //                     decoration: BoxDecoration(
+                //                       color: Colors.blue[100],
+                //                       borderRadius: BorderRadius.circular(4),
+                //                     ),
+                //                     child: Center(
+                //                       child: Text(
+                //                         marker.toString(),
+                //                         style: TextStyle(
+                //                           fontWeight: FontWeight.bold,
+                //                           fontSize: 18,
+                //                         ),
+                //                       ),
+                //                     ),
+                //                   );
+                //                 }).toList(),
+                //               ),
+                //             );
+                //           }).toList(),
+                //         ),
+                //       ),
+                //     ),
+                // ],
+              ],
             ],
           ),
-        ],
+        ),
       ),
     );
   }

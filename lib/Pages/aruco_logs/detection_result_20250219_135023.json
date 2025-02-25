@@ -1,0 +1,43 @@
+{
+    "timestamp": "2025-02-19T13:50:23.585782",
+    "markers": [
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 1378,
+                "y": 828
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 2300,
+                "y": 849
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 478,
+                "y": 892
+            }
+        }
+    ],
+    "rows": [
+        [
+            "R"
+        ],
+        [
+            "L"
+        ],
+        [
+            "F"
+        ]
+    ]
+}

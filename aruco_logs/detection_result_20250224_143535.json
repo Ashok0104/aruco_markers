@@ -1,0 +1,23 @@
+{
+    "timestamp": "2025-02-24T14:35:35.517467",
+    "dictionary_used": "DICT_4X4_1000",
+    "markers": [
+        {
+            "id": 418,
+            "display_value": "418",
+            "type": "id",
+            "position": {
+                "x": 1763,
+                "y": 2991
+            }
+        }
+    ],
+    "rows": [
+        [
+            "418"
+        ]
+    ],
+    "sequential_output": "418",
+    "source": "unknown",
+    "image_dimensions": "3008x4000"
+}

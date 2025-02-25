@@ -1,0 +1,139 @@
+{
+    "timestamp": "2025-02-19T18:17:16.124774",
+    "dictionary_used": "DICT_6X6_250",
+    "markers": [
+        {
+            "id": 2,
+            "display_value": "\u0002",
+            "numeric_value": 2,
+            "type": "ascii",
+            "position": {
+                "x": 39,
+                "y": 217
+            }
+        },
+        {
+            "id": 4,
+            "display_value": "\u0004",
+            "numeric_value": 4,
+            "type": "ascii",
+            "position": {
+                "x": 582,
+                "y": 212
+            }
+        },
+        {
+            "id": 4,
+            "display_value": "\u0004",
+            "numeric_value": 4,
+            "type": "ascii",
+            "position": {
+                "x": 387,
+                "y": 213
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "\u0003",
+            "numeric_value": 3,
+            "type": "ascii",
+            "position": {
+                "x": 212,
+                "y": 213
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "numeric_value": 70,
+            "type": "ascii",
+            "position": {
+                "x": 43,
+                "y": 137
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "numeric_value": 66,
+            "type": "ascii",
+            "position": {
+                "x": 223,
+                "y": 132
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "numeric_value": 76,
+            "type": "ascii",
+            "position": {
+                "x": 400,
+                "y": 130
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "numeric_value": 82,
+            "type": "ascii",
+            "position": {
+                "x": 579,
+                "y": 125
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F",
+            "B",
+            "L",
+            "R"
+        ],
+        [
+            "\u0002",
+            "\u0003",
+            "\u0004",
+            "\u0004"
+        ]
+    ],
+    "row_multiplication": {
+        "ascii_results": [
+            {
+                "position": 0,
+                "value1": 70,
+                "value2": 2,
+                "product": 140,
+                "ascii": null
+            },
+            {
+                "position": 1,
+                "value1": 66,
+                "value2": 3,
+                "product": 198,
+                "ascii": null
+            },
+            {
+                "position": 2,
+                "value1": 76,
+                "value2": 4,
+                "product": 304,
+                "ascii": null
+            },
+            {
+                "position": 3,
+                "value1": 82,
+                "value2": 4,
+                "product": 328,
+                "ascii": null
+            }
+        ],
+        "multiplication_results": [
+            140,
+            198,
+            304,
+            328
+        ]
+    },
+    "displayable_ascii": "____"
+}

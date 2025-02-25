@@ -1,2 +1,0 @@
-C:/TIF Labs1/aruco_markers/android/app/.cxx/Debug/2j2v616m/armeabi-v7a/CMakeFiles/edit_cache.dir
-C:/TIF Labs1/aruco_markers/android/app/.cxx/Debug/2j2v616m/armeabi-v7a/CMakeFiles/rebuild_cache.dir
