@@ -1,0 +1,95 @@
+{
+    "timestamp": "2025-02-25T17:05:27.815538",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 458,
+                "y": 1677
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 1073,
+                "y": 1666
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1681,
+                "y": 1678
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 2297,
+                "y": 1678
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 325,
+                "y": 2655
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 1003,
+                "y": 2641
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 1692,
+                "y": 2642
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 2378,
+                "y": 2649
+            }
+        }
+    ],
+    "rows": [
+        [
+            "R",
+            "B",
+            "L",
+            "F"
+        ],
+        [
+            "B",
+            "F",
+            "R",
+            "B"
+        ]
+    ],
+    "sequential_output": "RBLFBFRB",
+    "source": "unknown",
+    "image_dimensions": "3008x4000"
+}

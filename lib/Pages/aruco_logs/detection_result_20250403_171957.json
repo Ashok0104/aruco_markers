@@ -1,0 +1,77 @@
+{
+    "timestamp": "2025-04-03T17:19:57.022299",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 1760,
+                "y": 463
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 1386,
+                "y": 471
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 1768,
+                "y": 1262
+            }
+        },
+        {
+            "id": 1,
+            "display_value": "1",
+            "type": "id",
+            "position": {
+                "x": 1392,
+                "y": 1279
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1772,
+                "y": 2002
+            }
+        },
+        {
+            "id": 4,
+            "display_value": "4",
+            "type": "id",
+            "position": {
+                "x": 1406,
+                "y": 2009
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F",
+            "3"
+        ],
+        [
+            "R",
+            "1"
+        ],
+        [
+            "L",
+            "4"
+        ]
+    ],
+    "sequential_output": "FFFRLLLL",
+    "source": "unknown",
+    "image_dimensions": "4096x3072"
+}

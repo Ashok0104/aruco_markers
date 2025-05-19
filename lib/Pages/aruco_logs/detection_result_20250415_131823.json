@@ -1,0 +1,107 @@
+{
+    "timestamp": "2025-04-15T13:18:23.281443",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 1614,
+                "y": 273
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 1319,
+                "y": 328
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 1709,
+                "y": 832
+            }
+        },
+        {
+            "id": 1,
+            "display_value": "1",
+            "type": "id",
+            "position": {
+                "x": 1391,
+                "y": 901
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 1794,
+                "y": 1444
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 1477,
+                "y": 1512
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1851,
+                "y": 2161
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 1505,
+                "y": 2229
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F"
+        ],
+        [
+            "3"
+        ],
+        [
+            "R"
+        ],
+        [
+            "1"
+        ],
+        [
+            "B"
+        ],
+        [
+            "2"
+        ],
+        [
+            "L"
+        ],
+        [
+            "2"
+        ]
+    ],
+    "sequential_output": "FFFRBBLL",
+    "source": "unknown",
+    "image_dimensions": "4000x3008"
+}

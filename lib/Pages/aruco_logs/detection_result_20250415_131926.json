@@ -1,0 +1,197 @@
+{
+    "timestamp": "2025-04-15T13:19:26.501822",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 1283,
+                "y": 121
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 989,
+                "y": 168
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 2498,
+                "y": 218
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 2212,
+                "y": 264
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1275,
+                "y": 719
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 963,
+                "y": 755
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 2605,
+                "y": 791
+            }
+        },
+        {
+            "id": 1,
+            "display_value": "1",
+            "type": "id",
+            "position": {
+                "x": 2298,
+                "y": 843
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 1274,
+                "y": 1414
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 2701,
+                "y": 1399
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 926,
+                "y": 1453
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2404,
+                "y": 1449
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 2760,
+                "y": 2086
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 1282,
+                "y": 2151
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2438,
+                "y": 2133
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 920,
+                "y": 2194
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F"
+        ],
+        [
+            "2"
+        ],
+        [
+            "F"
+        ],
+        [
+            "3"
+        ],
+        [
+            "L"
+        ],
+        [
+            "3"
+        ],
+        [
+            "R"
+        ],
+        [
+            "1"
+        ],
+        [
+            "R",
+            "B"
+        ],
+        [
+            "2",
+            "2"
+        ],
+        [
+            "L"
+        ],
+        [
+            "B",
+            "2"
+        ],
+        [
+            "2"
+        ]
+    ],
+    "sequential_output": "FFFFFLLLRRRBBLLBB",
+    "source": "unknown",
+    "image_dimensions": "4000x3008"
+}

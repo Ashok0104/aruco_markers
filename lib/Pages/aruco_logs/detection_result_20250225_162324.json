@@ -1,0 +1,271 @@
+{
+    "timestamp": "2025-02-25T16:23:24.954085",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 360,
+                "y": 1668
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 1001,
+                "y": 1675
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1593,
+                "y": 1673
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 2182,
+                "y": 1679
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 355,
+                "y": 1940
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 999,
+                "y": 1958
+            }
+        },
+        {
+            "id": 4,
+            "display_value": "4",
+            "type": "id",
+            "position": {
+                "x": 1587,
+                "y": 1973
+            }
+        },
+        {
+            "id": 4,
+            "display_value": "4",
+            "type": "id",
+            "position": {
+                "x": 2189,
+                "y": 1977
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 307,
+                "y": 2517
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 974,
+                "y": 2530
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1591,
+                "y": 2530
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 2207,
+                "y": 2520
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 306,
+                "y": 2814
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 975,
+                "y": 2838
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 1596,
+                "y": 2840
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2223,
+                "y": 2845
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 252,
+                "y": 3458
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 948,
+                "y": 3473
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1589,
+                "y": 3479
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 2240,
+                "y": 3487
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 257,
+                "y": 3771
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 948,
+                "y": 3807
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 1600,
+                "y": 3804
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 2259,
+                "y": 3816
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F",
+            "B",
+            "L",
+            "R"
+        ],
+        [
+            "2",
+            "3"
+        ],
+        [
+            "4",
+            "4"
+        ],
+        [
+            "F",
+            "B",
+            "L",
+            "R"
+        ],
+        [
+            "2"
+        ],
+        [
+            "3",
+            "2",
+            "2"
+        ],
+        [
+            "F",
+            "B"
+        ],
+        [
+            "L",
+            "R"
+        ],
+        [
+            "2"
+        ],
+        [
+            "3",
+            "3",
+            "3"
+        ]
+    ],
+    "sequential_output": "FFBBBLLLLRRRRFFBBBLLRRFFBBBLLLRRR",
+    "source": "unknown",
+    "image_dimensions": "3008x4000"
+}

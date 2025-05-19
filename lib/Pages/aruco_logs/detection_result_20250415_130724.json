@@ -1,0 +1,195 @@
+{
+    "timestamp": "2025-04-15T13:07:24.444064",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 1591,
+                "y": 1225
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 2144,
+                "y": 1213
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 2696,
+                "y": 1234
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 1008,
+                "y": 1255
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2172,
+                "y": 1464
+            }
+        },
+        {
+            "id": 1,
+            "display_value": "1",
+            "type": "id",
+            "position": {
+                "x": 1622,
+                "y": 1500
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2724,
+                "y": 1488
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 1044,
+                "y": 1534
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 2760,
+                "y": 2259
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 2176,
+                "y": 2280
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1556,
+                "y": 2306
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 936,
+                "y": 2330
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2211,
+                "y": 2561
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2789,
+                "y": 2542
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 981,
+                "y": 2593
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 1591,
+                "y": 2593
+            }
+        }
+    ],
+    "rows": [
+        [
+            "R",
+            "B"
+        ],
+        [
+            "L"
+        ],
+        [
+            "F"
+        ],
+        [
+            "2"
+        ],
+        [
+            "1",
+            "2"
+        ],
+        [
+            "3"
+        ],
+        [
+            "B"
+        ],
+        [
+            "R"
+        ],
+        [
+            "L"
+        ],
+        [
+            "F"
+        ],
+        [
+            "2",
+            "2"
+        ],
+        [
+            "2",
+            "3"
+        ]
+    ],
+    "sequential_output": "RRBLLFFFBBRRLLFFF",
+    "source": "unknown",
+    "image_dimensions": "4000x3008"
+}

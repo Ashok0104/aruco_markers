@@ -1,0 +1,97 @@
+{
+    "timestamp": "2025-03-13T16:34:55.055987",
+    "dictionary_used": "DICT_6X6_250",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "70",
+            "position": {
+                "x": 54,
+                "y": 150
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "82",
+            "position": {
+                "x": 204,
+                "y": 153
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "70",
+            "position": {
+                "x": 351,
+                "y": 150
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "82",
+            "position": {
+                "x": 501,
+                "y": 153
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "position": {
+                "x": 60,
+                "y": 228
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "position": {
+                "x": 357,
+                "y": 228
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "70",
+            "position": {
+                "x": 54,
+                "y": 374
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "76",
+            "position": {
+                "x": 211,
+                "y": 370
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "70",
+            "position": {
+                "x": 351,
+                "y": 374
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "82",
+            "position": {
+                "x": 501,
+                "y": 371
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "70",
+            "position": {
+                "x": 49,
+                "y": 516
+            }
+        }
+    ],
+    "sequential_output": "70827082227076708270",
+    "source": "unknown",
+    "image_dimensions": "663x627"
+}

@@ -1,0 +1,35 @@
+{
+    "timestamp": "2025-02-24T14:26:31.148768",
+    "dictionary_used": "DICT_4X4_250",
+    "markers": [
+        {
+            "id": 123,
+            "display_value": "123",
+            "type": "id",
+            "position": {
+                "x": 1979,
+                "y": 1892
+            }
+        },
+        {
+            "id": 62,
+            "display_value": "62",
+            "type": "id",
+            "position": {
+                "x": 1351,
+                "y": 2464
+            }
+        }
+    ],
+    "rows": [
+        [
+            "123"
+        ],
+        [
+            "62"
+        ]
+    ],
+    "sequential_output": "12362",
+    "source": "unknown",
+    "image_dimensions": "3008x4000"
+}

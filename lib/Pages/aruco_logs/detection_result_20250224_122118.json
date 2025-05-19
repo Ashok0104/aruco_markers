@@ -1,0 +1,35 @@
+{
+    "timestamp": "2025-02-24T12:21:18.876153",
+    "dictionary_used": "DICT_6X6_50",
+    "markers": [
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 1352,
+                "y": 440
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 1293,
+                "y": 1979
+            }
+        }
+    ],
+    "rows": [
+        [
+            "2"
+        ],
+        [
+            "3"
+        ]
+    ],
+    "sequential_output": "23",
+    "source": "unknown",
+    "image_dimensions": "4000x3008"
+}

@@ -1,0 +1,97 @@
+{
+    "timestamp": "2025-02-21T18:04:55.783083",
+    "dictionary_used": "DICT_6X6_250",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 225,
+                "y": 491
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 973,
+                "y": 493
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1654,
+                "y": 482
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 2331,
+                "y": 481
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 1667,
+                "y": 786
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2352,
+                "y": 777
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 242,
+                "y": 810
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 986,
+                "y": 822
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F",
+            "B",
+            "L",
+            "R"
+        ],
+        [
+            "2",
+            "2"
+        ],
+        [
+            "2",
+            "3"
+        ]
+    ],
+    "sequential_output": "FFBBLLRRR",
+    "source": "unknown",
+    "image_dimensions": "3000x964"
+}

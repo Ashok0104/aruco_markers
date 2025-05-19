@@ -1,0 +1,95 @@
+{
+    "timestamp": "2025-04-03T18:37:57.046626",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 148,
+                "y": 828
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 346,
+                "y": 823
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 535,
+                "y": 822
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 721,
+                "y": 820
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 155,
+                "y": 914
+            }
+        },
+        {
+            "id": 1,
+            "display_value": "1",
+            "type": "id",
+            "position": {
+                "x": 354,
+                "y": 919
+            }
+        },
+        {
+            "id": 4,
+            "display_value": "4",
+            "type": "id",
+            "position": {
+                "x": 534,
+                "y": 917
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 730,
+                "y": 908
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F",
+            "R",
+            "L",
+            "F"
+        ],
+        [
+            "3",
+            "1",
+            "4",
+            "3"
+        ]
+    ],
+    "sequential_output": "FFFRLLLLFFF",
+    "source": "unknown",
+    "image_dimensions": "1080x1440"
+}

@@ -1,0 +1,197 @@
+{
+    "timestamp": "2025-04-15T13:21:18.862083",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 1127,
+                "y": 375
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 2259,
+                "y": 443
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 839,
+                "y": 428
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 1993,
+                "y": 492
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 1131,
+                "y": 951
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 2364,
+                "y": 988
+            }
+        },
+        {
+            "id": 3,
+            "display_value": "3",
+            "type": "id",
+            "position": {
+                "x": 838,
+                "y": 992
+            }
+        },
+        {
+            "id": 1,
+            "display_value": "1",
+            "type": "id",
+            "position": {
+                "x": 2079,
+                "y": 1043
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 2455,
+                "y": 1557
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 1147,
+                "y": 1603
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2182,
+                "y": 1611
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 831,
+                "y": 1654
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 2514,
+                "y": 2186
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 2222,
+                "y": 2237
+            }
+        },
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 1170,
+                "y": 2278
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 835,
+                "y": 2323
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F"
+        ],
+        [
+            "F",
+            "2"
+        ],
+        [
+            "3"
+        ],
+        [
+            "L"
+        ],
+        [
+            "R",
+            "3"
+        ],
+        [
+            "1"
+        ],
+        [
+            "B"
+        ],
+        [
+            "R",
+            "2"
+        ],
+        [
+            "2"
+        ],
+        [
+            "L"
+        ],
+        [
+            "2"
+        ],
+        [
+            "B"
+        ],
+        [
+            "2"
+        ]
+    ],
+    "sequential_output": "FFFFFLLLRBBRRLLBB",
+    "source": "unknown",
+    "image_dimensions": "4000x3008"
+}

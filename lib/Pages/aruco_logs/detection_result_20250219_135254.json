@@ -1,0 +1,287 @@
+{
+    "timestamp": "2025-02-19T13:52:54.949673",
+    "markers": [
+        {
+            "id": 30,
+            "display_value": "30",
+            "type": "id",
+            "position": {
+                "x": 595,
+                "y": 454
+            }
+        },
+        {
+            "id": 10,
+            "display_value": "10",
+            "type": "id",
+            "position": {
+                "x": 1066,
+                "y": 464
+            }
+        },
+        {
+            "id": 20,
+            "display_value": "20",
+            "type": "id",
+            "position": {
+                "x": 1540,
+                "y": 458
+            }
+        },
+        {
+            "id": 40,
+            "display_value": "40",
+            "type": "id",
+            "position": {
+                "x": 2017,
+                "y": 454
+            }
+        },
+        {
+            "id": 30,
+            "display_value": "30",
+            "type": "id",
+            "position": {
+                "x": 579,
+                "y": 929
+            }
+        },
+        {
+            "id": 10,
+            "display_value": "10",
+            "type": "id",
+            "position": {
+                "x": 1063,
+                "y": 933
+            }
+        },
+        {
+            "id": 20,
+            "display_value": "20",
+            "type": "id",
+            "position": {
+                "x": 1551,
+                "y": 925
+            }
+        },
+        {
+            "id": 40,
+            "display_value": "40",
+            "type": "id",
+            "position": {
+                "x": 2040,
+                "y": 922
+            }
+        },
+        {
+            "id": 30,
+            "display_value": "30",
+            "type": "id",
+            "position": {
+                "x": 566,
+                "y": 1432
+            }
+        },
+        {
+            "id": 10,
+            "display_value": "10",
+            "type": "id",
+            "position": {
+                "x": 1063,
+                "y": 1433
+            }
+        },
+        {
+            "id": 20,
+            "display_value": "20",
+            "type": "id",
+            "position": {
+                "x": 1561,
+                "y": 1428
+            }
+        },
+        {
+            "id": 40,
+            "display_value": "40",
+            "type": "id",
+            "position": {
+                "x": 2062,
+                "y": 1423
+            }
+        },
+        {
+            "id": 30,
+            "display_value": "30",
+            "type": "id",
+            "position": {
+                "x": 552,
+                "y": 1973
+            }
+        },
+        {
+            "id": 10,
+            "display_value": "10",
+            "type": "id",
+            "position": {
+                "x": 1065,
+                "y": 1971
+            }
+        },
+        {
+            "id": 20,
+            "display_value": "20",
+            "type": "id",
+            "position": {
+                "x": 1575,
+                "y": 1964
+            }
+        },
+        {
+            "id": 30,
+            "display_value": "30",
+            "type": "id",
+            "position": {
+                "x": 537,
+                "y": 2544
+            }
+        },
+        {
+            "id": 10,
+            "display_value": "10",
+            "type": "id",
+            "position": {
+                "x": 1061,
+                "y": 2538
+            }
+        },
+        {
+            "id": 20,
+            "display_value": "20",
+            "type": "id",
+            "position": {
+                "x": 1586,
+                "y": 2525
+            }
+        },
+        {
+            "id": 20,
+            "display_value": "20",
+            "type": "id",
+            "position": {
+                "x": 1600,
+                "y": 3123
+            }
+        },
+        {
+            "id": 40,
+            "display_value": "40",
+            "type": "id",
+            "position": {
+                "x": 2138,
+                "y": 3106
+            }
+        },
+        {
+            "id": 30,
+            "display_value": "30",
+            "type": "id",
+            "position": {
+                "x": 525,
+                "y": 3142
+            }
+        },
+        {
+            "id": 10,
+            "display_value": "10",
+            "type": "id",
+            "position": {
+                "x": 1061,
+                "y": 3137
+            }
+        },
+        {
+            "id": 40,
+            "display_value": "40",
+            "type": "id",
+            "position": {
+                "x": 2156,
+                "y": 3711
+            }
+        },
+        {
+            "id": 10,
+            "display_value": "10",
+            "type": "id",
+            "position": {
+                "x": 1062,
+                "y": 3749
+            }
+        },
+        {
+            "id": 20,
+            "display_value": "20",
+            "type": "id",
+            "position": {
+                "x": 1611,
+                "y": 3734
+            }
+        },
+        {
+            "id": 30,
+            "display_value": "30",
+            "type": "id",
+            "position": {
+                "x": 516,
+                "y": 3763
+            }
+        }
+    ],
+    "rows": [
+        [
+            "30",
+            "10",
+            "20",
+            "40"
+        ],
+        [
+            "30",
+            "10",
+            "20",
+            "40"
+        ],
+        [
+            "30",
+            "10",
+            "20",
+            "40"
+        ],
+        [
+            "30",
+            "10",
+            "20"
+        ],
+        [
+            "30",
+            "10",
+            "20"
+        ],
+        [
+            "20",
+            "40"
+        ],
+        [
+            "30",
+            "10"
+        ],
+        [
+            "40"
+        ],
+        [
+            "10",
+            "20"
+        ],
+        [
+            "30"
+        ]
+    ]
+}

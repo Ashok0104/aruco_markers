@@ -1,0 +1,31 @@
+{
+    "timestamp": "2025-02-18T13:28:23.294154",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "FFF",
+            "type": "ascii",
+            "position": {
+                "x": 37,
+                "y": 162
+            },
+            "processed": true
+        },
+        {
+            "id": 66,
+            "display_value": "BBB",
+            "type": "ascii",
+            "position": {
+                "x": 443,
+                "y": 163
+            },
+            "processed": true
+        }
+    ],
+    "rows": [
+        [
+            "FFF",
+            "BBB"
+        ]
+    ]
+}

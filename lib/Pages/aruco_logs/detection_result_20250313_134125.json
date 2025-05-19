@@ -1,0 +1,129 @@
+{
+    "timestamp": "2025-03-13T13:41:25.307153",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 54,
+                "y": 150
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 204,
+                "y": 153
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 351,
+                "y": 150
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 501,
+                "y": 153
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 54,
+                "y": 228
+            }
+        },
+        {
+            "id": 2,
+            "display_value": "2",
+            "type": "id",
+            "position": {
+                "x": 351,
+                "y": 228
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 54,
+                "y": 374
+            }
+        },
+        {
+            "id": 76,
+            "display_value": "L",
+            "type": "ascii",
+            "position": {
+                "x": 211,
+                "y": 370
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 351,
+                "y": 374
+            }
+        },
+        {
+            "id": 82,
+            "display_value": "R",
+            "type": "ascii",
+            "position": {
+                "x": 501,
+                "y": 371
+            }
+        },
+        {
+            "id": 70,
+            "display_value": "F",
+            "type": "ascii",
+            "position": {
+                "x": 49,
+                "y": 516
+            }
+        }
+    ],
+    "rows": [
+        [
+            "F",
+            "R",
+            "F",
+            "R"
+        ],
+        [
+            "2",
+            "2"
+        ],
+        [
+            "F",
+            "L",
+            "F",
+            "R"
+        ],
+        [
+            "F"
+        ]
+    ],
+    "sequential_output": "FFRRFRFLFRF",
+    "source": "unknown",
+    "image_dimensions": "663x627"
+}

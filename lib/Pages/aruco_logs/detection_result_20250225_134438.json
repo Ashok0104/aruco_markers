@@ -1,0 +1,23 @@
+{
+    "timestamp": "2025-02-25T13:44:38.272221",
+    "dictionary_used": "DICT_6X6_100",
+    "markers": [
+        {
+            "id": 66,
+            "display_value": "B",
+            "type": "ascii",
+            "position": {
+                "x": 1856,
+                "y": 1921
+            }
+        }
+    ],
+    "rows": [
+        [
+            "B"
+        ]
+    ],
+    "sequential_output": "B",
+    "source": "unknown",
+    "image_dimensions": "3008x4000"
+}
