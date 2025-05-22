@@ -1,90 +1,59 @@
-from fastapi import FastAPI, File, UploadFile, Query, Body
+import logging
+import asyncio
+import os
+import uuid
+import json
 import cv2
 import numpy as np
-import uvicorn
-from fastapi.responses import JSONResponse
-import socket
-import paho.mqtt.client as mqtt
 from PIL import Image
-from pillow_heif import register_heif_opener
 import io
-import logging
-from datetime import datetime
-import os
-import json
-from typing import List, Optional
-import asyncio
-from bleak import BleakClient
+from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
-app = FastAPI()
+from bleak import BleakClient
+from datetime import datetime
 
 # Set up logging configuration
 log_directory = "aruco_logs"
 if not os.path.exists(log_directory):
     os.makedirs(log_directory)
 
-# Create separate loggers for different types of logs
-def setup_logger(name, log_file):
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-    
-    # Create file handler
-    fh = logging.FileHandler(log_file)
-    fh.setLevel(logging.INFO)
-    
-    # Create formatter
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    
-    # Add handler to logger
-    logger.addHandler(fh)
-    return logger
+# Configure detection logger
+detection_logger = logging.getLogger('detection')
+detection_logger.setLevel(logging.INFO)
+detection_fh = logging.FileHandler(f'{log_directory}/detection.log')
+detection_fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+detection_logger.addHandler(detection_fh)
+detection_logger.addHandler(logging.StreamHandler())
 
-# Initialize different loggers
-detection_logger = setup_logger('detection', f'{log_directory}/detection.log')
-mqtt_logger = setup_logger('mqtt', f'{log_directory}/mqtt.log')
-error_logger = setup_logger('error', f'{log_directory}/error.log')
-operation_logger = setup_logger('operation', f'{log_directory}/operation.log')
-bluetooth_logger = setup_logger('bluetooth', f'{log_directory}/bluetooth.log')
-# Add new logger for result IDs
-result_id_logger = setup_logger('result_id', f'{log_directory}/result_ids.log')
+# Configure Bluetooth logger
+bluetooth_logger = logging.getLogger('bluetooth')
+bluetooth_logger.setLevel(logging.INFO)
+bluetooth_fh = logging.FileHandler(f'{log_directory}/bluetooth.log')
+bluetooth_fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+bluetooth_logger.addHandler(bluetooth_fh)
 
-# Register HEIF format to Pillow
-register_heif_opener()
-
-# MQTT Configuration
-MQTT_BROKER = "broker.emqx.io"
-MQTT_PORT = 1883
-MQTT_TOPIC = "aruco@123"
-
-# Initialize MQTT client
-mqtt_client = mqtt.Client()
-mqtt_client.connect(MQTT_BROKER, MQTT_PORT, 60)
-
-# Define all ArUco dictionary types available in OpenCV
+# Define allowed ArUco dictionary types
 ARUCO_DICTIONARIES = {
-    "DICT_4X4_50": cv2.aruco.DICT_4X4_50,
-    "DICT_4X4_100": cv2.aruco.DICT_4X4_100,
-    "DICT_4X4_250": cv2.aruco.DICT_4X4_250,
-    "DICT_4X4_1000": cv2.aruco.DICT_4X4_1000,
-    "DICT_5X5_50": cv2.aruco.DICT_5X5_50,
-    "DICT_5X5_100": cv2.aruco.DICT_5X5_100,
-    "DICT_5X5_250": cv2.aruco.DICT_5X5_250,
-    "DICT_5X5_1000": cv2.aruco.DICT_5X5_1000,
-    "DICT_6X6_50": cv2.aruco.DICT_6X6_50,
     "DICT_6X6_100": cv2.aruco.DICT_6X6_100,
-    "DICT_6X6_250": cv2.aruco.DICT_6X6_250,
-    "DICT_6X6_1000": cv2.aruco.DICT_6X6_1000,
-    "DICT_7X7_50": cv2.aruco.DICT_7X7_50,
-    "DICT_7X7_100": cv2.aruco.DICT_7X7_100,
-    "DICT_7X7_250": cv2.aruco.DICT_7X7_250,
-    "DICT_7X7_1000": cv2.aruco.DICT_7X7_1000,
-    "DICT_ARUCO_ORIGINAL": cv2.aruco.DICT_ARUCO_ORIGINAL,
-    "DICT_APRILTAG_16h5": cv2.aruco.DICT_APRILTAG_16h5,
-    "DICT_APRILTAG_25h9": cv2.aruco.DICT_APRILTAG_25h9,
-    "DICT_APRILTAG_36h10": cv2.aruco.DICT_APRILTAG_36h10,
-    "DICT_APRILTAG_36h11": cv2.aruco.DICT_APRILTAG_36h11
+    "DICT_6X6_250": cv2.aruco.DICT_6X6_250
+}
+
+# Direction marker IDs mapped to visual representation
+DIRECTIONS = {
+    70: "F",   # Yellow with up arrow
+    82: "R",   # Blue with right arrow  
+    76: "L",   # Red with left arrow
+    66: "B"    # Green with down arrow
+}
+
+# Multiplier marker IDs
+MULTIPLIERS = {
+    2: 2,
+    3: 3,
+    4: 4,
+    5: 5
 }
 
 # Bluetooth configuration
@@ -92,96 +61,62 @@ ADDRESS = "3C:84:27:C2:A0:AD"
 UART_TX_CHAR_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"  # TX UUID (sending)
 UART_RX_CHAR_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"  # RX UUID (receiving)
 
-# In-memory store for recent detection results
-detection_results_cache = {}
+# Initialize FastAPI app
+app = FastAPI(title="ArUco Marker Detection and Bluetooth API")
 
-def get_local_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(("8.8.8.8", 80))
-        ip = s.getsockname()[0]
-    except Exception as e:
-        error_logger.error(f"IP address retrieval failed: {str(e)}")
-        ip = "127.0.0.1"
-    finally:
-        s.close()
-    return ip
+# Add CORS middleware with updated configuration to expose X-Metadata header
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://192.168.4.51:5500"],  # Allow your web app's origin
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+    expose_headers=["X-Metadata"],  # Expose the X-Metadata header to the client
+)
 
-def save_detection_result(result_data):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{log_directory}/detection_result_{timestamp}.json"
-    result_id = timestamp
-    
-    try:
-        with open(filename, 'w') as f:
-            json.dump(result_data, f, indent=4)
-        operation_logger.info(f"Detection result saved to {filename}")
-        
-        # Store in memory cache with a unique ID
-        detection_results_cache[result_id] = result_data
-        
-        # Log the result ID with additional information
-        result_id_logger.info(
-            json.dumps({
-                "result_id": result_id,
-                "timestamp": datetime.now().isoformat(),
-                "filename": filename,
-                "marker_count": len(result_data.get("markers", [])),
-                "sequential_output": result_data.get("sequential_output", ""),
-                "dictionary_used": result_data.get("dictionary_used", "")
-            })
-        )
-        
-        return result_id
-    except Exception as e:
-        error_logger.error(f"Failed to save detection result: {str(e)}")
-        return None
+# In-memory storage for sequence history
+sequence_history = []
 
-def standardize_image(image_bytes: bytes) -> np.ndarray:
-    """Standardize image processing regardless of source (camera or gallery)"""
+def standardize_image(image_data: bytes) -> np.ndarray:
+    """Load and standardize image from bytes, converting to PNG"""
     try:
-        # First convert to PIL Image to handle different formats uniformly
-        pil_image = Image.open(io.BytesIO(image_bytes))
-        
-        # Convert to RGB mode and standardize
+        # Use PIL to open and convert any image format to PNG
+        pil_image = Image.open(io.BytesIO(image_data))
         if pil_image.mode != 'RGB':
             pil_image = pil_image.convert('RGB')
         
-        # Standardize orientation based on EXIF data
-        if hasattr(pil_image, '_getexif') and pil_image._getexif() is not None:
-            exif = dict(pil_image._getexif().items())
-            orientation = exif.get(274, 1)  # 274 is the orientation tag
-            
-            if orientation == 3:
-                pil_image = pil_image.rotate(180, expand=True)
-            elif orientation == 6:
-                pil_image = pil_image.rotate(270, expand=True)
-            elif orientation == 8:
-                pil_image = pil_image.rotate(90, expand=True)
+        # Convert to PNG format
+        png_buffer = io.BytesIO()
+        pil_image.save(png_buffer, format="PNG")
+        png_data = png_buffer.getvalue()
         
-        # Convert to a standardized OpenCV format
-        img_array = np.array(pil_image)
-        opencv_image = cv2.cvtColor(img_array, cv2.COLOR_RGB2BGR)
+        # Convert PNG data to numpy array for OpenCV
+        nparr = np.frombuffer(png_data, np.uint8)
+        image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if image is None:
+            raise ValueError("Failed to decode image")
         
-        operation_logger.info("Image successfully standardized")
-        return opencv_image
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        detection_logger.info("Image successfully standardized to PNG")
+        return image
     except Exception as e:
-        error_logger.error(f"Image standardization failed: {str(e)}")
+        detection_logger.error(f"Image standardization failed: {str(e)}")
         return None
 
 def enhance_image(image):
+    """Enhance image for better marker detection"""
     try:
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         thresh = cv2.adaptiveThreshold(
             gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
         )
         denoised = cv2.fastNlMeansDenoising(thresh)
         kernel = np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]])
         sharpened = cv2.filter2D(denoised, -1, kernel)
-        operation_logger.info("Image enhancement completed successfully")
+        detection_logger.info("Image enhancement completed successfully")
         return sharpened
     except Exception as e:
-        error_logger.error(f"Image enhancement failed: {str(e)}")
+        detection_logger.error(f"Image enhancement failed: {str(e)}")
         return None
 
 def detect_markers_with_dictionary(image, dict_type):
@@ -190,7 +125,6 @@ def detect_markers_with_dictionary(image, dict_type):
         aruco_dict = cv2.aruco.getPredefinedDictionary(ARUCO_DICTIONARIES[dict_type])
         parameters = cv2.aruco.DetectorParameters()
         
-        # Consistent parameters for both camera and gallery images
         parameters.adaptiveThreshConstant = 7
         parameters.adaptiveThreshWinSizeMin = 3
         parameters.adaptiveThreshWinSizeMax = 23
@@ -203,18 +137,15 @@ def detect_markers_with_dictionary(image, dict_type):
         
         detector = cv2.aruco.ArucoDetector(aruco_dict, parameters)
         
-        # Standard set of image processing attempts regardless of source
         attempts = [
-            ("original", cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)),
+            ("original", cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)),
             ("enhanced", enhance_image(image)),
-            ("blurred", cv2.GaussianBlur(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), (5, 5), 0)),
-            ("sharpened", cv2.filter2D(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY), -1, 
+            ("blurred", cv2.GaussianBlur(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), (5, 5), 0)),
+            ("sharpened", cv2.filter2D(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY), -1, 
                                      np.array([[-1,-1,-1], [-1,9,-1], [-1,-1,-1]]))),
-            # Add histogram equalization for better contrast handling
-            ("equalized", cv2.equalizeHist(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))),
-            # Add CLAHE (Contrast Limited Adaptive Histogram Equalization)
+            ("equalized", cv2.equalizeHist(cv2.cvtColor(image, cv2.COLOR_RGB2GRAY))),
             ("clahe", cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8)).apply(
-                        cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)))
+                        cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)))
         ]
         
         best_result = None
@@ -241,12 +172,11 @@ def detect_markers_with_dictionary(image, dict_type):
             
         return best_result, max_markers
     except Exception as e:
-        error_logger.error(f"Error detecting markers with dictionary {dict_type}: {str(e)}")
+        detection_logger.error(f"Error detecting markers with dictionary {dict_type}: {str(e)}")
         return None, 0
 
-def detect_markers_with_multiple_dictionaries(image, dict_types=None):
-    """Try multiple ArUco dictionaries to find the best match, limited to 6x6 dictionaries"""
-    # Override any provided dict_types to use only the allowed dictionaries
+def detect_markers_with_multiple_dictionaries(image):
+    """Try multiple ArUco dictionaries to find the best match"""
     dict_types = ["DICT_6X6_100", "DICT_6X6_250"]
     
     best_result = None
@@ -259,10 +189,6 @@ def detect_markers_with_multiple_dictionaries(image, dict_types=None):
             max_markers = num_markers
             best_result = result
             best_dict = dict_type
-            
-            # If we found a significant number of markers, we can stop early
-            if max_markers >= getExpectedMarkerCount(image):
-                break
     
     if best_result:
         detection_logger.info(f"Best dictionary was {best_dict} with {max_markers} markers")
@@ -271,49 +197,19 @@ def detect_markers_with_multiple_dictionaries(image, dict_types=None):
         detection_logger.warning("No markers detected with allowed dictionaries")
         return ([], None, None)
 
-def getExpectedMarkerCount(image):
-    image_area = image.shape[0] * image.shape[1]
-    typical_marker_area = 50 * 50
-    expected_count = min(20, int(image_area / (typical_marker_area * 4)))
-    operation_logger.info(f"Expected marker count: {expected_count}")
-    return expected_count
-
-def is_same_row(y1: float, y2: float, threshold: float = 20.0) -> bool:
-    return abs(y1 - y2) <= threshold
-
-def group_markers_by_rows(markers: list, threshold: float = 20.0) -> list:
-    if not markers:
-        return []
-    
-    sorted_markers = sorted(markers, key=lambda m: m["position"]["y"])
-    rows = []
-    current_row = [sorted_markers[0]]
-    
-    for marker in sorted_markers[1:]:
-        if is_same_row(marker["position"]["y"], current_row[0]["position"]["y"], threshold):
-            current_row.append(marker)
-        else:
-            current_row.sort(key=lambda m: m["position"]["x"])
-            rows.append(current_row)
-            current_row = [marker]
-    
-    if current_row:
-        current_row.sort(key=lambda m: m["position"]["x"])
-        rows.append(current_row)
-    
-    operation_logger.info(f"Grouped markers into {len(rows)} rows")
-    return rows
-
-def get_marker_value(marker_id: int) -> dict:
-    ascii_char = chr(marker_id) if 32 <= marker_id <= 126 else None
-    special_chars = ['B', 'F', 'R', 'L']
-    
-    if ascii_char in special_chars:
-        detection_logger.info(f"Marker {marker_id} interpreted as ASCII '{ascii_char}'")
+def classify_marker(marker_id: int) -> dict:
+    """Classify marker by type and get display value"""
+    if marker_id in DIRECTIONS:
         return {
             "id": marker_id,
-            "display_value": ascii_char,
-            "type": "ascii"
+            "display_value": DIRECTIONS[marker_id],
+            "type": "direction"
+        }
+    elif marker_id in MULTIPLIERS:
+        return {
+            "id": marker_id,
+            "display_value": str(MULTIPLIERS[marker_id]),
+            "type": "multiplier"
         }
     else:
         detection_logger.info(f"Marker {marker_id} interpreted as ID")
@@ -323,293 +219,330 @@ def get_marker_value(marker_id: int) -> dict:
             "type": "id"
         }
 
-def process_marker_sequence(sorted_markers):
-    processed_markers = []
-    ascii_markers = []
-    id_markers = []
+def find_multiplier_below(direction_marker, all_markers, threshold=200):
+    """Find a multiplier marker below this direction marker"""
+    dir_x = direction_marker["position"]["x"]
+    dir_y = direction_marker["position"]["y"]
     
-    # First, separate ASCII and ID markers
-    for marker in sorted_markers:
-        if marker["type"] == "ascii":
-            ascii_markers.append(marker)
-        else:  # type == "id"
-            id_markers.append(marker)
+    multipliers = [m for m in all_markers if m["type"] == "multiplier"]
+    if not multipliers:
+        return 1
     
-    # If we have ID markers, create alternating pattern
-    if id_markers:
-        # Process pairs of ASCII and ID markers
-        max_pairs = min(len(ascii_markers), len(id_markers))
+    for marker in multipliers:
+        m_x = marker["position"]["x"]
+        m_y = marker["position"]["y"]
         
-        for i in range(max_pairs):
-            # Add ASCII marker
-            processed_markers.append(ascii_markers[i])
-            # Add ID marker
-            processed_markers.append(id_markers[i])
+        x_diff = abs(dir_x - m_x)
+        y_diff = m_y - dir_y
         
-        # Add any remaining ASCII markers
-        processed_markers.extend(ascii_markers[max_pairs:])
-        # Add any remaining ID markers
-        processed_markers.extend(id_markers[max_pairs:])
-    else:
-        # If no ID markers, just process ASCII markers normally
-        for current_marker in sorted_markers:
-            processed_markers.append(current_marker)
+        if 0 < y_diff < threshold and x_diff < 100:
+            detection_logger.info(f"Found multiplier {marker['display_value']} below direction {direction_marker['display_value']} " +
+                       f"at ({dir_x}, {dir_y}), multiplier at ({m_x}, {m_y})")
+            return int(marker["display_value"])
     
-    detection_logger.info(f"Processed {len(processed_markers)} markers in sequence")
-    return processed_markers
+    detection_logger.info(f"No multiplier found below direction {direction_marker['display_value']} at ({dir_x}, {dir_y})")
+    return 1
 
-def expand_fbrl_sequence(sequence):
-    expanded_output = ""
-    i = 0
-    while i < len(sequence):
-        char = sequence[i]
-        if (char in "FBRL" and i + 1 < len(sequence) and sequence[i + 1].isdigit()):
-            repeat_count = int(sequence[i + 1])
-            expanded_output += char * repeat_count
-            i += 2  # Skip the number as well
-        else:
-            expanded_output += char
-            i += 1
-    return expanded_output
-
-def process_sequential_output(markers):
+def group_markers_by_rows(markers, row_threshold=50):
+    """Group markers into rows based on y-coordinate proximity"""
     if not markers:
-        return ""
+        return []
     
-    has_id_markers = any(marker["type"] == "id" for marker in markers)
+    sorted_by_y = sorted(markers, key=lambda m: m["position"]["y"])
     
-    if has_id_markers:
-        output = ""
-        ascii_values = [m["display_value"] for m in markers if m["type"] == "ascii"]
-        id_values = [m["display_value"] for m in markers if m["type"] == "id"]
+    rows = []
+    current_row = [sorted_by_y[0]]
+    current_row_y = sorted_by_y[0]["position"]["y"]
+    
+    for marker in sorted_by_y[1:]:
+        marker_y = marker["position"]["y"]
         
-        for ascii_val, id_val in zip(ascii_values, id_values):
-            output += str(ascii_val) + str(id_val)
-        
-        if len(ascii_values) > len(id_values):
-            output += ''.join(ascii_values[len(id_values):])
-        elif len(id_values) > len(ascii_values):
-            output += ''.join(id_values[len(ascii_values):])
-    else:
-        output = ''.join(str(marker["display_value"]) for marker in markers)
+        if abs(marker_y - current_row_y) <= row_threshold:
+            current_row.append(marker)
+        else:
+            rows.append(sorted(current_row, key=lambda m: m["position"]["x"]))
+            current_row = [marker]
+            current_row_y = marker_y
     
-    return expand_fbrl_sequence(output)
+    if current_row:
+        rows.append(sorted(current_row, key=lambda m: m["position"]["x"]))
+    
+    detection_logger.info(f"Grouped markers into {len(rows)} rows")
+    
+    for i, row in enumerate(rows):
+        detection_logger.info(f"Row {i+1} contains {len(row)} markers with y-values: {[m['position']['y'] for m in row]}")
+    
+    return rows
 
-async def send_message(client, message):
-    try:
-        await client.write_gatt_char(UART_RX_CHAR_UUID, message.encode(), response=True)
-        bluetooth_logger.info(f"Sent: {message} - Success")
-        return True
-    except Exception as e:
-        error_logger.error(f"Error sending message: {e}")
-        return False
+def process_markers_for_output(direction_markers, all_markers):
+    """Process all markers to generate the output sequence and return log message"""
+    rows = group_markers_by_rows(direction_markers, row_threshold=50)
+    
+    rows.sort(key=lambda row: sum(m["position"]["y"] for m in row) / len(row))
+    
+    final_sequence = ""
+    
+    for row_idx, row in enumerate(rows):
+        detection_logger.info(f"Processing row {row_idx + 1} with {len(row)} markers")
+        
+        for marker in row:
+            direction = marker["display_value"]
+            multiplier = find_multiplier_below(marker, all_markers, threshold=200)
+            final_sequence += direction * multiplier
+            detection_logger.info(f"Added {direction} x {multiplier} to sequence")
+    
+    log_message = f"Final sequence generated: {final_sequence}"
+    detection_logger.info(log_message)
+    return final_sequence, log_message
 
-async def send_bluetooth_message(message):
+def annotate_image(image, markers, output_sequence):
+    """Annotate image with marker information and final sequence"""
+    annotated_image = image.copy()
+    
+    for marker in markers:
+        x, y = marker["position"]["x"], marker["position"]["y"]
+        marker_type = marker["type"]
+        display_value = marker["display_value"]
+        
+        if marker_type == "direction":
+            color = (0, 0, 255)
+        elif marker_type == "multiplier":
+            color = (255, 255, 0)
+        else:
+            color = (0, 255, 0)
+        
+        cv2.circle(annotated_image, (x, y), 20, color, 2)
+        
+        text = f"{display_value} ({x},{y})"
+        cv2.putText(
+            annotated_image,
+            text,
+            (x + 25, y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 0, 0),
+            2,
+            cv2.LINE_AA
+        )
+    
+    cv2.putText(
+        annotated_image,
+        f"Sequence: {output_sequence}",
+        (20, 30),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        1.0,
+        (0, 0, 255),
+        2,
+        cv2.LINE_AA
+    )
+    
+    return annotated_image
+
+def image_to_bytes(image: np.ndarray) -> bytes:
+    """Convert image to PNG bytes for response"""
+    _, buffer = cv2.imencode('.png', cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+    return buffer.tobytes()
+
+async def send_bluetooth_message(message: str) -> bool:
+    """Send the complete sequence message via Bluetooth with proper chunking and termination"""
     try:
         async with BleakClient(ADDRESS) as client:
             if not client.is_connected:
-                error_logger.error("Failed to connect to Bluetooth device")
+                bluetooth_logger.error("Failed to connect to Bluetooth device")
                 return False
 
             bluetooth_logger.info(f"Connected to {ADDRESS}")
-            result = await send_message(client, message)
-            return result
+            
+            try:
+                # Add newline terminator to indicate end of message
+                full_message = (message + '\n').encode('utf-8')
+                bluetooth_logger.info(f"Encoded message: {full_message!r} (length: {len(full_message)} bytes)")
+                
+                # Check message length and split if necessary
+                MAX_CHUNK_SIZE = 20  # Common BLE characteristic limit
+                
+                if len(full_message) <= MAX_CHUNK_SIZE:
+                    # Send as single message
+                    await client.write_gatt_char(UART_RX_CHAR_UUID, full_message, response=False)
+                    bluetooth_logger.info(f"Sent complete sequence as single message: '{message}' (length: {len(message)} chars, {len(full_message)} bytes)")
+                else:
+                    # Send in chunks
+                    bluetooth_logger.info(f"Message too long ({len(full_message)} bytes), sending in {len(full_message) // MAX_CHUNK_SIZE + 1} chunks")
+                    
+                    for i in range(0, len(full_message), MAX_CHUNK_SIZE):
+                        chunk = full_message[i:i + MAX_CHUNK_SIZE]
+                        bluetooth_logger.info(f"Sending chunk {i // MAX_CHUNK_SIZE + 1}: {chunk!r} (length: {len(chunk)} bytes)")
+                        await client.write_gatt_char(UART_RX_CHAR_UUID, chunk, response=False)
+                        # Increased delay between chunks
+                        await asyncio.sleep(0.1)
+                
+                # Increased final delay to ensure transmission completes
+                await asyncio.sleep(0.5)
+                
+                bluetooth_logger.info(f"Successfully sent complete sequence: '{message}' (length: {len(message)} chars)")
+                return True
+                
+            except Exception as e:
+                bluetooth_logger.error(f"Error sending sequence '{message}': {str(e)}")
+                return False
+                
     except asyncio.CancelledError:
-        error_logger.error("Bluetooth connection attempt was cancelled")
+        bluetooth_logger.error("Bluetooth connection attempt was cancelled")
         return False
     except Exception as e:
-        error_logger.error(f"Bluetooth communication error: {e}")
+        bluetooth_logger.error(f"Bluetooth communication error: {str(e)}")
         return False
     finally:
         bluetooth_logger.info("Bluetooth communication finished")
 
-@app.post("/detect_markers/")
-async def detect_markers(
-    file: UploadFile = File(...),
-    dict_types: Optional[List[str]] = Query(
-        None,
-        description="Only DICT_6X6_100 and DICT_6X6_250 are supported.",
-        example=["DICT_6X6_100", "DICT_6X6_250"]
-    ),
-    source: str = Query(
-        "unknown",
-        description="Source of the image (camera or gallery)"
-    )
-):
-    operation_logger.info(f"Starting marker detection for file: {file.filename}, source: {source}")
-    
-    # Override any provided dict_types to use only the allowed dictionaries
-    allowed_dicts = ["DICT_6X6_100", "DICT_6X6_250"]
-    
-    # If dict_types are provided, check if they're allowed
-    if dict_types:
-        invalid_dicts = [d for d in dict_types if d not in allowed_dicts]
-        if invalid_dicts:
-            error_logger.error(f"Invalid dictionary types: {invalid_dicts}")
-            return JSONResponse(
-                status_code=400, 
-                content={"error": f"Invalid dictionary types: {invalid_dicts}", 
-                         "valid_types": allowed_dicts}
-            )
-        # Only use dictionaries that are both provided and allowed
-        dict_types = [d for d in dict_types if d in allowed_dicts]
-    else:
-        # If none provided, use all allowed dictionaries
-        dict_types = allowed_dicts
-    
-    image_bytes = await file.read()
-    
-    # Use the standardized image processing pipeline for both camera and gallery
-    image = standardize_image(image_bytes)
-    if image is None:
-        error_logger.error("Image standardization failed")
-        return JSONResponse(status_code=400, content={"error": "Failed to process image."})
-    
-    # Store original dimensions for debugging
-    original_height, original_width = image.shape[:2]
-    operation_logger.info(f"Original image dimensions: {original_width}x{original_height}")
-    
-    # Detect markers with standardized parameters
-    corners, ids, used_dict = detect_markers_with_multiple_dictionaries(image, dict_types)
-
-    
-    if ids is None:
-        detection_logger.warning("No ArUco markers detected")
-        return JSONResponse(content={"message": "No ArUco markers detected."})
-    
-    detected_markers = []
-    
-    # Draw markers for debugging/verification
-    cv2.aruco.drawDetectedMarkers(image, corners, borderColor=(255, 255, 255))
-    
-    for marker_id, corner in zip(ids, corners):
-        marker_id = int(marker_id[0])
-        x = int(np.mean(corner[0][:, 0]))
-        y = int(np.mean(corner[0][:, 1]))
-        
-        marker_info = get_marker_value(marker_id)
-        
-        detected_markers.append({
-            "id": marker_id,
-            "display_value": marker_info["display_value"],
-            "type": marker_info["type"],
-            "position": {"x": x, "y": y}
-        })
-    
-    # Group and process markers consistently
-    sorted_rows = group_markers_by_rows(detected_markers)
-    
-    processed_rows = []
-    for row in sorted_rows:
-        processed_row = process_marker_sequence(row)
-        processed_rows.append(processed_row)
-    
-    processed_markers = [marker for row in processed_rows for marker in row]
-    
-    final_output = process_sequential_output(processed_markers)
-    operation_logger.info(f"Final Sequential Output: {final_output}")
-    
-    # Include source information in the result data
-    result_data = {
-        "timestamp": datetime.now().isoformat(),
-        "dictionary_used": used_dict,
-        "markers": processed_markers,
-        "rows": [[marker["display_value"] for marker in row] for row in processed_rows],
-        "sequential_output": final_output,
-        "source": source,
-        "image_dimensions": f"{original_width}x{original_height}"
-    }
-    
-    # Save detection result and get the unique ID
-    result_id = save_detection_result(result_data)
-    
-    if final_output:
-        mqtt_message = {
-            "timestamp": datetime.now().isoformat(),
-            "values": final_output,
-            "source": source,
-            "dictionary": used_dict
-        }
-        result = mqtt_client.publish(MQTT_TOPIC, str(mqtt_message))
-        if result.rc == mqtt.MQTT_ERR_SUCCESS:
-            mqtt_logger.info(f"MQTT message sent successfully: {mqtt_message}")
-        else:
-            mqtt_logger.error("MQTT message sending failed")
-    
-    detection_logger.info(f"Final Sequential Output: {final_output}")
-    
-    # Include the result_id in the response so Flutter can use it to trigger Bluetooth
-    result_data["result_id"] = result_id
-    return JSONResponse(content=result_data)
-
-# Define the model for the Bluetooth trigger request
 class DirectBluetoothRequest(BaseModel):
-    message: str
+    message: str = None  # Make message optional since it won't be used
 
-# Add this endpoint
+@app.post("/detect-markers")
+async def detect_markers(file: UploadFile = File(...), send_bluetooth: str = "false"):
+    """Endpoint to detect ArUco markers in an uploaded image and optionally send sequence via Bluetooth"""
+    try:
+        # Convert send_bluetooth query param to boolean
+        send_bluetooth_bool = send_bluetooth.lower() == "true"
+        
+        # Read image data
+        image_data = await file.read()
+        detection_logger.info(f"Received image: {file.filename}, size: {len(image_data)} bytes")
+
+        # Step 1: Standardize image to PNG
+        image = standardize_image(image_data)
+        if image is None:
+            raise HTTPException(status_code=400, detail="Failed to process image")
+
+        # Step 2: Detect ArUco markers
+        corners, ids, used_dict = detect_markers_with_multiple_dictionaries(image)
+        
+        if ids is None or len(ids) == 0:
+            detection_logger.warning("No ArUco markers detected")
+            raise HTTPException(status_code=404, detail="No ArUco markers detected")
+
+        # Step 3: Process detected markers
+        all_markers = []
+        for i, (marker_id, corner) in enumerate(zip(ids, corners)):
+            marker_id = int(marker_id[0])
+            x = int(np.mean(corner[0][:, 0]))
+            y = int(np.mean(corner[0][:, 1]))
+            
+            marker_info = classify_marker(marker_id)
+            marker_info["position"] = {"x": x, "y": y}
+            marker_info["corner"] = corner
+            all_markers.append(marker_info)
+            detection_logger.info(f"Detected marker: ID={marker_id}, Type={marker_info['type']}, Position=({x},{y})")
+
+        # Step 4: Filter out direction markers
+        direction_markers = [m for m in all_markers if m["type"] == "direction"]
+
+        # Step 5: Process markers to generate the output sequence
+        final_sequence, sequence_log = process_markers_for_output(direction_markers, all_markers)
+
+        # Step 6: Store the sequence
+        sequence_history.append({
+            "sequence": final_sequence,
+            "timestamp": datetime.now().isoformat(),
+            "source": "detect-markers"
+        })
+        detection_logger.info(f"Stored sequence: {final_sequence} from detect-markers")
+
+        # Step 7: Optionally send the final_sequence via Bluetooth
+        bluetooth_status = None
+        if send_bluetooth_bool:
+            bluetooth_logger.info(f"Preparing to send final sequence via Bluetooth: '{final_sequence}' (length: {len(final_sequence)} chars)")
+            success = await send_bluetooth_message(final_sequence)
+            bluetooth_status = f"Bluetooth transmission of final sequence '{final_sequence}' successful" if success else f"Bluetooth transmission of final sequence '{final_sequence}' failed"
+
+        # Step 8: Annotate the image
+        annotated_image = annotate_image(image, all_markers, final_sequence)
+
+        # Convert annotated image to PNG bytes
+        image_bytes = image_to_bytes(annotated_image)
+
+        # Prepare metadata to include in headers
+        metadata = {
+            "sequence": final_sequence,
+            "sequence_log": sequence_log,
+            "markers_detected": len(all_markers),
+            "bluetooth_status": bluetooth_status if send_bluetooth_bool else "Bluetooth not triggered"
+        }
+
+        # Return StreamingResponse with metadata in headers
+        return StreamingResponse(
+            io.BytesIO(image_bytes),
+            media_type="image/png",
+            headers={
+                "Content-Disposition": f"inline; filename=annotated_{uuid.uuid4()}.png",
+                "X-Metadata": json.dumps(metadata)
+            }
+        )
+
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        detection_logger.error(f"Error processing request: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 @app.post("/send_bluetooth_direct/")
 async def send_bluetooth_direct(request: DirectBluetoothRequest):
-    """Endpoint for sending a message directly via Bluetooth without needing a previous detection"""
-    message = request.message
-    
-    if not message:
-        error_logger.error("No message provided for direct Bluetooth send")
+    """Endpoint for sending the latest stored sequence via Bluetooth"""
+    # Fetch the latest sequence from sequence_history
+    if not sequence_history:
+        bluetooth_logger.error("No sequences available in history to send")
         return JSONResponse(
             status_code=400,
-            content={"error": "No message provided to send"}
+            content={"error": "No sequences available in history to send"}
         )
     
-    # Send via Bluetooth
-    bluetooth_logger.info(f"Sending via Bluetooth (direct): {message}")
-    success = await send_bluetooth_message(message)
+    final_sequence = sequence_history[-1]["sequence"]
+    
+    # Use exact same logging and approach as the working detect-markers endpoint
+    bluetooth_logger.info(f"Preparing to send stored sequence via Bluetooth: '{final_sequence}' (length: {len(final_sequence)} chars)")
+    success = await send_bluetooth_message(final_sequence)
+    
+    # Store the sequence if transmission is successful (to maintain history)
+    if success:
+        sequence_history.append({
+            "sequence": final_sequence,
+            "timestamp": datetime.now().isoformat(),
+            "source": "send_bluetooth_direct"
+        })
+        bluetooth_logger.info(f"Stored sequence: {final_sequence} from send_bluetooth_direct")
+    
+    # Use exact same status message format as detect-markers endpoint
+    bluetooth_status = f"Bluetooth transmission of final sequence '{final_sequence}' successful" if success else f"Bluetooth transmission of final sequence '{final_sequence}' failed"
+    
+    bluetooth_logger.info(bluetooth_status)
     
     if success:
         return JSONResponse(
             content={
                 "message": "Bluetooth transmission successful",
-                "data_sent": message
+                "data_sent": final_sequence,
+                "bluetooth_status": bluetooth_status
             }
         )
     else:
         return JSONResponse(
             status_code=500,
-            content={"error": "Bluetooth not connected"}
+            content={
+                "error": "Bluetooth transmission failed", 
+                "bluetooth_status": bluetooth_status
+            }
         )
 
-@app.get("/available_dictionaries/")
-async def get_available_dictionaries():
-    """Return a list of all available ArUco dictionary types"""
-    return {"dictionaries": list(ARUCO_DICTIONARIES.keys())}
-
-@app.get("/list_results/")
-async def list_results():
-    """Return a list of all stored result IDs with their details"""
-    try:
-        results = []
-        log_file = f'{log_directory}/result_ids.log'
-        
-        if os.path.exists(log_file):
-            with open(log_file, 'r') as f:
-                for line in f:
-                    try:
-                        # Extract the JSON part from the log line
-                        json_str = line.split(' - INFO - ')[1]
-                        result_info = json.loads(json_str)
-                        results.append(result_info)
-                    except Exception as e:
-                        error_logger.error(f"Error parsing log line: {str(e)}")
-                        continue
-        
-        return {"results": results}
-    except Exception as e:
-        error_logger.error(f"Error listing results: {str(e)}")
-        return JSONResponse(
-            status_code=500,
-            content={"error": "Failed to retrieve results"}
-        )
+@app.get("/get_sequence_history/")
+async def get_sequence_history():
+    """Endpoint to fetch the history of stored sequences"""
+    return JSONResponse(
+        content={
+            "message": "Sequence history retrieved successfully",
+            "sequences": sequence_history
+        }
+    )
 
 if __name__ == "__main__":
-    local_ip = get_local_ip()
-    operation_logger.info(f"Server starting on: http://{local_ip}:8000")
-    mqtt_client.loop_start()
-    uvicorn.run(app, host=local_ip, port=8000)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
